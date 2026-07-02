@@ -1,0 +1,24 @@
+# OS junk
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Editor files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Python cache
+__pycache__/
+
+# Claude Code working files
+.claude/
+
+# Maintainer working files — not for shipping
+BUILD_HANDOFF.md
+_not_for_ship/
+
+# State backups contain personal data (companions, chats, memory books) — never commit
+little-lantern-backup-*.json

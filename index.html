@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Little Lantern</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github-dark.min.css">
+    <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="logo.jpg" alt="Little Lantern" class="sidebar-logo">
+            </div>
+            
+            <nav class="sidebar-nav">
+                <button class="nav-btn active" data-panel="chat">
+                    Chat
+                </button>
+                
+                <button class="nav-btn" data-panel="characters">
+                    Companions
+                </button>
+
+                <button class="nav-btn" data-panel="personas">
+                    About You
+                </button>
+                
+                <button class="nav-btn" data-panel="systemprompts">
+                    System Prompts
+                </button>
+
+                <button class="nav-btn" data-panel="memorybooks">
+                    Memory Books
+                </button>
+
+                <button class="nav-btn" data-panel="settings">
+                    Machine Room
+                </button>
+            </nav>
+            
+            <div class="sidebar-endpoint">
+                <h4>Endpoint</h4>
+                <select id="sidebarEndpoint" class="sidebar-endpoint-select">
+                    <option value="openrouter">OpenRouter</option>
+                    <option value="claude">Claude</option>
+                    <option value="nous">Nous</option>
+                    <option value="openai" selected>OpenAI</option>
+                    <option value="gemini">Gemini</option>
+                    <option value="mistral">Mistral</option>
+                </select>
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="connection-status" id="connectionStatus">
+                    <span class="status-dot disconnected"></span>
+                    <span class="status-text">Not Connected</span>
+                </div>
+                <div class="cache-indicator" id="cacheIndicator" style="display:none;">
+                    <span class="cache-indicator-label">cache:</span>
+                    <span class="cache-indicator-value" id="cacheIndicatorValue">—</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Help / Guides Modal -->
+        <div class="modal" id="helpModal">
+            <div class="modal-content modal-small">
+                <div class="modal-header">
+                    <h3>Help &amp; Guides</h3>
+                    <button class="modal-close" id="closeHelpModal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="help-box">
+                        <h4>Stuck? Ask your AI. 🔦</h4>
+                        <p>Your guides are in the <strong>Little_Lantern_Guides</strong> folder, right where you unzipped Little Lantern.</p>
+                        <p>Give those files to your frontier-model AI (ChatGPT, Claude, Gemini…) with its <strong>+</strong> / attach button, then ask it <em>anything you need to know</em> — it's read the lot and will walk you through, one step at a time.</p>
+                        <p><strong>Or read them yourself</strong> — same folder, open any guide. 💛</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            
+            <!-- Chat Panel -->
+            <section class="panel active" id="panel-chat">
+                <div class="chat-header">
+                    <div class="chat-actions">
+                        <button class="btn btn-save" id="exportChatBtn">
+                            📂 Save Chat
+                        </button>
+
+                        <button class="btn btn-dpo" id="exportDpoBtn" style="display:none;">
+                            Save DPO <span class="dpo-counter" id="dpoCounter" style="display:none;">0</span>
+                        </button>
+
+                        <button class="btn btn-secondary" id="newChatBtn">
+                            New Chat
+                        </button>
+
+                        <label class="gm-debug-toggle" title="Show/hide GM notes in chat">
+                            <input type="checkbox" id="gmDebugToggle">
+                            <span>GM</span>
+                        </label>
+
+                        <button class="btn btn-help" id="helpBtn" title="New here? Start here">❓ Help</button>
+                    </div>
+
+                    <div class="chat-header-right">
+                        <div class="token-odometer" id="tokenOdometer" title="Total tokens used this session (input / output). Click ↺ to reset.">
+                            <span class="token-odometer-label">tokens:</span>
+                            <span class="token-odometer-value" id="tokenOdometerValue">↑0 ↓0</span>
+                            <button class="token-odometer-reset" id="tokenOdometerReset" title="Reset token counter">↺</button>
+                        </div>
+
+                        <div class="current-session">
+                            <div class="session-character" id="currentCharacterDisplay">
+                                <span class="placeholder-text">No companion</span>
+                            </div>
+
+                            <div class="session-persona" id="currentPersonaDisplay">
+                                <span class="placeholder-text">No About You set</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="chat-messages" id="chatMessages">
+                    <div class="welcome-message">
+                        <p>Select a companion and an About You to begin.</p>
+                        
+                        <p>Or just start typing to chat with the raw model.</p>
+                    </div>
+                </div>
+                
+                <div class="chat-input-area">
+                    <div id="attachImagePreview" class="attach-image-preview" style="display:none;"></div>
+                    <div class="input-row">
+                        <textarea
+                            id="userInput"
+                            placeholder="Type your message..."
+                            rows="3"
+                        ></textarea>
+
+                        <div class="input-buttons">
+                            <input type="file" id="attachFileInput" style="display:none;" accept=".txt,.md,.json,.js,.ts,.py,.html,.css,.xml,.yml,.yaml,.csv,.log,.rtf,.text,image/png,image/jpeg,image/webp,image/gif">
+                            <div class="attach-row">
+                                <button class="btn btn-secondary attach-btn" id="attachBtn" title="Attach a file (text pasted in) or an image (sent to vision-capable models)">
+                                    📎
+                                </button>
+                                <button class="btn btn-secondary attach-btn" id="generateImageBtn" title="Generate an image from your prompt (OpenAI gpt-image-2)">
+                                    🎨
+                                </button>
+                            </div>
+                            <button class="btn btn-primary" id="sendBtn">
+                                Send
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Characters Panel -->
+            <section class="panel" id="panel-characters">
+                <div class="panel-header">
+                    <h2>Companions</h2>
+                    
+                    <div class="panel-actions">
+                        <select id="characterSizeFilter" class="filter-select" style="display:none;">
+                            <option value="all">All Sizes</option>
+                            <option value="5-6B">5/6B</option>
+                            <option value="7-8B">7/8B</option>
+                            <option value="12-24B">12-24B</option>
+                            <option value="34-70B">34-70B</option>
+                            <option value="120B+">120B+</option>
+                        </select>
+                        
+                        <button class="btn btn-primary" id="newCharacterBtn">
+                            + New Companion
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="card-grid" id="characterGrid">
+                    <!-- Characters load here -->
+                </div>
+                
+                <!-- Character Editor Modal -->
+                <div class="modal" id="characterModal">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3 id="characterModalTitle">New Companion</h3>
+                            <button class="modal-close" id="closeCharacterModal">&times;</button>
+                        </div>
+                        
+                        <div class="modal-body">
+                            <!-- File import -->
+                            <div class="import-section">
+                                <button class="btn btn-secondary btn-small" id="importFileBtn">Import File</button>
+                                <input type="file" id="characterFileImport" accept=".md,.json,.txt,.text" hidden>
+                                <span class="field-hint">Load .md, .json, or .txt into card fields</span>
+                            </div>
+
+                            <!-- Import preview (hidden until file loaded) -->
+                            <div class="import-preview" id="importPreview" style="display:none;">
+                                <div class="import-preview-header">
+                                    <span class="import-filename" id="importPreviewFilename"></span>
+                                    <button class="btn-small" id="closeImportPreviewBtn">&times;</button>
+                                </div>
+                                <textarea id="importPreviewContent" rows="6" readonly></textarea>
+                                <div class="import-apply-buttons">
+                                    <span class="field-hint">Apply to:</span>
+                                    <button class="btn-small" onclick="applyImportToField('description')">About</button>
+                                    <button class="btn-small" onclick="applyImportToField('backstory')">Background / history</button>
+                                    <button class="btn-small" onclick="applyImportToField('scenario')">Current situation / projects</button>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="image-upload">
+                                    <div class="image-preview" id="characterImagePreview">
+                                        <span>Click to upload</span>
+                                    </div>
+                                    <input type="file" id="characterImage" accept="image/*" hidden>
+                                </div>
+
+                                <div class="form-fields">
+                                    <div class="form-group">
+                                        <label for="characterName">Name</label>
+                                        <input type="text" id="characterName" placeholder="Name">
+                                    </div>
+
+                                    <div class="form-group" style="display:none;">
+                                        <label for="characterSize">Model Size Tier</label>
+                                        <select id="characterSize">
+                                            <option value="5-6B">5/6B</option>
+                                            <option value="7-8B">7/8B</option>
+                                            <option value="12-24B">12-24B</option>
+                                            <option value="34-70B">34-70B</option>
+                                            <option value="120B+">120B+</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="characterSystemPrompt">
+                                    System Prompt
+                                    <span class="field-hint">(from system-prompts/ folder)</span>
+                                </label>
+                                <select id="characterSystemPrompt">
+                                    <option value="none">None</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="characterVoiceExamples">
+                                    Voice &amp; Interaction Examples
+                                    <span class="field-hint">(sample exchanges that capture how your companion talks — from the voice-examples/ folder. Used most when moving a companion in from another app.)</span>
+                                </label>
+                                <select id="characterVoiceExamples">
+                                    <option value="none">None</option>
+                                </select>
+                                <input type="file" id="voiceExamplesFileImport" accept=".txt,.md,.text" style="display:none;">
+                                <button type="button" class="btn btn-secondary" id="voiceExamplesImportBtn" style="margin-top:0.5rem;">📄 Upload a Voice Examples file</button>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="characterCurrentContextWorking">
+                                    Desk Notes — auto from your folder
+                                    <span class="field-hint">(optional: a filename in your Working Directory, e.g. companionname-context.md — read fresh every chat, no upload needed)</span>
+                                </label>
+                                <input type="text" id="characterCurrentContextWorking" placeholder="e.g. companionname-context.md">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="characterDescription">
+                                    About
+                                    <span class="field-hint">(identity, personality, abilities)</span>
+                                </label>
+                                <textarea id="characterDescription" rows="8" placeholder="Companion identity, personality, abilities..."></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="characterBackstory">Background / history with you</label>
+                                <textarea id="characterBackstory" rows="4" placeholder="Background and history with you..."></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="characterScenario">
+                                    Current situation / projects
+                                    <span class="field-hint">(optional)</span>
+                                </label>
+                                <textarea id="characterScenario" rows="3" placeholder="Current situation or projects..."></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Attach Memory Books</label>
+                                <div class="memorybook-selector" id="characterMemoryBooks">
+                                    <!-- Memory book checkboxes load here -->
+                                    <p class="placeholder-text">No memory books created yet</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="modal-footer">
+                            <button class="btn btn-secondary" id="deleteCharacterBtn">Delete</button>
+                            <button class="btn btn-primary" id="saveCharacterBtn">Save Companion</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Personas Panel -->
+            <section class="panel" id="panel-personas">
+                <div class="panel-header">
+                    <h2>About You</h2>
+
+                    <button class="btn btn-primary" id="newPersonaBtn">
+                        + New About You
+                    </button>
+                </div>
+                
+                <div class="card-grid" id="personaGrid">
+                    <!-- Personas load here -->
+                </div>
+                
+                <!-- Persona Editor Modal -->
+                <div class="modal" id="personaModal">
+                    <div class="modal-content modal-small">
+                        <div class="modal-header">
+                            <h3 id="personaModalTitle">New About You</h3>
+                            <button class="modal-close" id="closePersonaModal">&times;</button>
+                        </div>
+                        
+                        <div class="modal-body">
+                            <div class="form-row">
+                                <div class="image-upload">
+                                    <div class="image-preview" id="personaImagePreview">
+                                        <span>Click to upload</span>
+                                    </div>
+                                    <input type="file" id="personaImage" accept="image/*" hidden>
+                                </div>
+                                
+                                <div class="form-fields">
+                                    <div class="form-group">
+                                        <label for="personaName">Name</label>
+                                        <input type="text" id="personaName" placeholder="e.g., Adventure Me, Test Me">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="personaDescription">Description</label>
+                                <textarea id="personaDescription" rows="6" placeholder="Your self-description for this context..."></textarea>
+                                <input type="file" id="personaFileImport" accept=".txt,.md,.text,.json" style="display:none;">
+                                <button type="button" class="btn btn-secondary" id="personaImportBtn" style="margin-top:0.5rem;">📄 Upload a file instead of typing</button>
+                            </div>
+                        </div>
+                        
+                        <div class="modal-footer">
+                            <button class="btn btn-secondary" id="deletePersonaBtn">Delete</button>
+                            <button class="btn btn-primary" id="savePersonaBtn">Save About You</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Memory Books Panel -->
+            <section class="panel" id="panel-memorybooks">
+                <div class="panel-header">
+                    <h2>Memory Books</h2>
+                    
+                    <button class="btn btn-primary" id="newMemoryBookBtn">
+                        + New Memory Book
+                    </button>
+                </div>
+                
+                <div class="memorybook-list" id="memoryBookList">
+                    <!-- Memory books load here -->
+                </div>
+                
+                <!-- Memory Book Editor Modal -->
+                <div class="modal" id="memoryBookModal">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3 id="memoryBookModalTitle">New Memory Book</h3>
+                            <button class="modal-close" id="closeMemoryBookModal">&times;</button>
+                        </div>
+                        
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label for="memoryBookName">Memory Book Name</label>
+                                <input type="text" id="memoryBookName" placeholder="e.g., Loki Memory Book">
+                            </div>
+                            
+                            <div class="entries-section">
+                                <div class="entries-header">
+                                    <h4>Entries</h4>
+                                    <button class="btn btn-small" id="addEntryBtn">+ Add Entry</button>
+                                </div>
+                                
+                                <div class="entries-list" id="memoryBookEntries">
+                                    <!-- Entries load here -->
+                                </div>
+                            </div>
+                            
+                            <div class="token-counter">
+                                <span id="memoryBookTokens">0</span> / 3000 tokens (approx)
+                            </div>
+                        </div>
+                        
+                        <div class="modal-footer">
+                            <button class="btn btn-secondary" id="deleteMemoryBookBtn">Delete</button>
+                            <button class="btn btn-primary" id="saveMemoryBookBtn">Save Memory Book</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- System Prompts Panel -->
+            <section class="panel" id="panel-systemprompts">
+                <div class="panel-header">
+                    <h2>System Prompts</h2>
+
+                    <div class="panel-actions">
+                        <button class="btn btn-secondary" id="uploadSystemPromptBtn">
+                            Upload File
+                        </button>
+                        <input type="file" id="systemPromptFileImport" accept=".txt,.md,.text" hidden>
+                    </div>
+                </div>
+
+                <div class="sp-layout">
+                    <!-- Left: list of saved prompts -->
+                    <div class="sp-list">
+                        <div class="sp-list-items" id="systemPromptList">
+                            <!-- Prompt names load here -->
+                        </div>
+
+                        <button class="btn btn-primary btn-small sp-new-btn" id="newSystemPromptBtn">
+                            + New
+                        </button>
+                    </div>
+
+                    <!-- Right: inline editor -->
+                    <div class="sp-editor">
+                        <div class="form-group">
+                            <label for="systemPromptName">Name</label>
+                            <input type="text" id="systemPromptName" placeholder="e.g., Creative, General, Work, Health">
+                        </div>
+
+                        <div class="form-group sp-editor-content">
+                            <label for="systemPromptContent">Content</label>
+                            <textarea id="systemPromptContent" placeholder="Enter or paste system prompt text..."></textarea>
+                        </div>
+
+                        <div class="sp-editor-actions">
+                            <button class="btn btn-secondary btn-small" id="deleteSystemPromptBtn">Delete</button>
+                            <button class="btn btn-primary btn-small" id="saveSystemPromptBtn">Save</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Settings Panel -->
+            <section class="panel" id="panel-settings">
+                <div class="panel-header">
+                    <h2>Machine Room</h2>
+                </div>
+                
+                <div class="settings-content">
+                    <div class="settings-section">
+                        <h3>Endpoints</h3>
+                        
+                        <div class="endpoint-card" style="display:none;">
+                            <div class="endpoint-header">
+                                <label class="toggle-label">
+                                    <input type="checkbox" id="localEnabled" checked>
+                                    <span>Local llama.cpp</span>
+                                </label>
+                            </div>
+
+                            <div class="endpoint-fields">
+                                <div class="form-group">
+                                    <label for="localUrl">URL</label>
+                                    <input type="text" id="localUrl" value="http://localhost:8080">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="endpoint-card" style="display:none;">
+                            <div class="endpoint-header">
+                                <label class="toggle-label">
+                                    <input type="checkbox" id="runpodEnabled">
+                                    <span>RunPod llama.cpp</span>
+                                </label>
+                            </div>
+
+                            <div class="endpoint-fields">
+                                <div class="form-group">
+                                    <label for="runpodUrl">URL (paste your current pod URL)</label>
+                                    <input type="text" id="runpodUrl" placeholder="https://xxxxx-8080.proxy.runpod.net">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="endpoint-card">
+                            <div class="endpoint-header">
+                                <label class="toggle-label">
+                                    <input type="checkbox" id="openrouterEnabled">
+                                    <span>OpenRouter</span>
+                                </label>
+                            </div>
+                            
+                            <div class="endpoint-fields">
+                                <div class="form-group">
+                                    <label for="openrouterKey">API Key</label>
+                                    <input type="password" id="openrouterKey" placeholder="sk-or-...">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="openrouterModel">Model</label>
+                                    <select id="openrouterModel">
+                                        <option value="openrouter/owl-alpha">Owl Alpha</option>
+                                        <option value="xiaomi/mimo-v2-flash">mimo-v2-flash (no vision)</option>
+                                        <option value="xiaomi/mimo-v2.5">mimo-v2.5 (no vision)</option>
+                                        <option value="xiaomi/mimo-v2.5-pro">mimo-v2.5-pro</option>
+                                        <option value="deepseek/deepseek-v4-flash">deepseek-v4-flash (no vision)</option>
+                                        <option value="deepseek/deepseek-v4-pro">deepseek-v4-pro (no vision)</option>
+                                        <option value="moonshotai/kimi-k2.6">kimi-2.6</option>
+                                        <option value="moonshotai/kimi-k2.7-code">kimi-2.7-code (no vision)</option>
+                                        <option value="inclusionai/ring-2.6-1t">ring-2.6 (no vision)</option>
+                                        <option value="x-ai/grok-4.3">grok-4.3</option>
+                                        <option value="z-ai/glm-5.2">glm-5.2 (no vision)</option>
+                                        <option value="nvidia/nemotron-3-super-120b-a12b">nemotron-3-super (no vision)</option>
+                                        <option value="__custom__">Custom (enter slug below)…</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group" id="openrouterCustomGroup">
+                                    <label for="openrouterCustomModel">Custom slug</label>
+                                    <input type="text" id="openrouterCustomModel" placeholder="e.g., meta-llama/llama-3-70b-instruct">
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <div class="endpoint-card">
+                            <div class="endpoint-header">
+                                <label class="toggle-label">
+                                    <input type="checkbox" id="claudeEnabled">
+                                    <span>Claude API</span>
+                                </label>
+                            </div>
+                            
+                            <div class="endpoint-fields">
+                                <div class="form-group">
+                                    <label for="claudeKey">API Key</label>
+                                    <input type="password" id="claudeKey" placeholder="sk-ant-...">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="claudeModel">Model</label>
+                                    <select id="claudeModel">
+                                        <option value="claude-sonnet-5">Sonnet 5</option>
+                                        <option value="claude-fable-5">Fable 5</option>
+                                        <option value="claude-opus-4-8">Opus 4.8</option>
+                                        <option value="claude-opus-4-7">Opus 4.7</option>
+                                        <option value="claude-opus-4-6">Opus 4.6</option>
+                                        <option value="claude-opus-4-5">Opus 4.5</option>
+                                        <option value="claude-sonnet-4-6">Sonnet 4.6</option>
+                                        <option value="claude-sonnet-4-5">Sonnet 4.5</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group" id="claudeEffortGroup">
+                                    <label for="claudeEffort">Reasoning Effort (adaptive Claude models)</label>
+                                    <select id="claudeEffort">
+                                        <option value="low">Low</option>
+                                        <option value="medium" selected>Medium</option>
+                                        <option value="high">High</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group cache-mode-group">
+                                    <label for="claudeCacheMode">
+                                        Prompt caching
+                                        <span class="cache-hint">(system + last turn)</span>
+                                    </label>
+                                    <select id="claudeCacheMode">
+                                        <option value="off">Off</option>
+                                        <option value="5m" selected>5 min (standard)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="endpoint-card">
+                            <div class="endpoint-header">
+                                <label class="toggle-label">
+                                    <input type="checkbox" id="nousEnabled">
+                                    <span>Nous Research</span>
+                                </label>
+                            </div>
+
+                            <div class="endpoint-fields">
+                                <div class="form-group">
+                                    <label for="nousKey">API Key</label>
+                                    <input type="password" id="nousKey" placeholder="your-nous-api-key">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="nousModel">Model</label>
+                                    <select id="nousModel">
+                                        <option value="Hermes-4-405B">Hermes-4-405B (no vision)</option>
+                                        <option value="Hermes-4-70B">Hermes-4-70B (no vision)</option>
+                                    </select>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <div class="endpoint-card">
+                            <div class="endpoint-header">
+                                <label class="toggle-label">
+                                    <input type="checkbox" id="openaiEnabled">
+                                    <span>OpenAI</span>
+                                </label>
+                            </div>
+
+                            <div class="endpoint-fields">
+                                <div class="form-group">
+                                    <label for="openaiKey">API Key</label>
+                                    <input type="password" id="openaiKey" placeholder="sk-...">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="openaiModel">Model</label>
+                                    <select id="openaiModel">
+                                        <option value="gpt-4o-2024-05-13">4o (no vision)</option>
+                                        <option value="gpt-4o-mini-2024-07-18">4o-mini (no vision)</option>
+                                        <option value="gpt-4.1-2025-04-14">4.1</option>
+                                        <option value="gpt-4.1-mini-2025-04-14">4.1-mini</option>
+                                        <option value="o3-2025-04-16">o3</option>
+                                        <option value="o3-mini-2025-01-31">o3-mini (txt only)</option>
+                                        <option value="gpt-5.1-2025-11-13">5.1</option>
+                                        <option value="gpt-5.4-2026-03-05">5.4</option>
+                                        <option value="gpt-5.4-mini-2026-03-17">5.4-mini</option>
+                                        <option value="gpt-5.5-2026-04-23">5.5</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="openaiApiMode">API Mode</label>
+                                    <select id="openaiApiMode">
+                                        <option value="responses">Responses API (default)</option>
+                                        <option value="chatcompletions">Chat Completions (fallback)</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group" id="reasoningEffortGroup">
+                                    <label for="openaiReasoningEffort">Reasoning Effort (GPT-5.1 / 5.4 / 5.5)</label>
+                                    <select id="openaiReasoningEffort">
+                                        <option value="none">None</option>
+                                        <option value="low">Low</option>
+                                        <option value="medium" selected>Medium</option>
+                                        <option value="high">High</option>
+                                        <option value="xhigh">xHigh</option>
+                                    </select>
+                                </div>
+
+                                <label class="cache-toggle">
+                                    <input type="checkbox" id="openaiCacheEnabled">
+                                    <span>Prompt caching <span class="cache-hint">(automatic, shows usage)</span></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="endpoint-card">
+                            <div class="endpoint-header">
+                                <label class="toggle-label">
+                                    <input type="checkbox" id="geminiEnabled">
+                                    <span>Gemini</span>
+                                </label>
+                            </div>
+
+                            <div class="endpoint-fields">
+                                <div class="form-group">
+                                    <label for="geminiKey">API Key</label>
+                                    <input type="password" id="geminiKey" placeholder="your-gemini-api-key">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="geminiModel">Model</label>
+                                    <select id="geminiModel">
+                                        <option value="gemini-3.5-flash">3.5 Flash</option>
+                                        <option value="gemini-3.1-flash-lite">3.1 Flash Lite</option>
+                                        <option value="gemini-3.1-pro-preview">3.1 Pro</option>
+                                    </select>
+                                </div>
+
+                                <p class="cache-hint">Prompt caching is automatic for Gemini — handled for you, nothing to set.</p>
+                            </div>
+                        </div>
+
+                        <div class="endpoint-card">
+                            <div class="endpoint-header">
+                                <label class="toggle-label">
+                                    <input type="checkbox" id="mistralEnabled">
+                                    <span>Mistral</span>
+                                </label>
+                            </div>
+
+                            <div class="endpoint-fields">
+                                <div class="form-group">
+                                    <label for="mistralKey">API Key</label>
+                                    <input type="password" id="mistralKey" placeholder="your-mistral-api-key">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="mistralModel">Model</label>
+                                    <select id="mistralModel">
+                                        <option value="mistral-medium-3-5">Mistral Med 3.5</option>
+                                        <option value="devstral-2512">Devstral 2 (no vision)</option>
+                                        <option value="mistral-large-2512">Mistral Large</option>
+                                    </select>
+                                </div>
+
+                                <p class="cache-hint">Prompt caching is automatic for Mistral — handled for you, nothing to set.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="settings-section">
+                        <h3>Active Endpoint</h3>
+                        
+                        <div class="form-group">
+                            <select id="activeEndpoint" class="endpoint-select">
+                                <option value="openrouter">OpenRouter</option>
+                                <option value="claude">Claude API</option>
+                                <option value="nous">Nous Research</option>
+                                <option value="openai" selected>OpenAI</option>
+                                <option value="gemini">Gemini</option>
+                                <option value="mistral">Mistral</option>
+                            </select>
+                        </div>
+                        
+                        <button class="btn btn-primary" id="testConnectionBtn">
+                            Test Connection
+                        </button>
+                    </div>
+
+                    <div class="settings-section">
+                        <h3>Backup &amp; Restore</h3>
+                        <p class="cache-hint" style="margin-bottom: 0.75rem;">Your companions, personas, memory books, and settings live only in this browser — clearing it loses them. Save a backup to a file on your computer, then Import to restore. <strong>API keys are NOT included</strong> — keep those saved somewhere safe on your own.</p>
+                        <button class="btn btn-secondary" id="exportStateBtn">Save backup (.json)</button>
+                        <button class="btn btn-secondary" id="importStateBtn">Import backup…</button>
+                        <input type="file" id="importStateFile" accept=".json,application/json" style="display:none;">
+                    </div>
+
+                    <div class="settings-section">
+                        <h3>Tools</h3>
+                        <p class="cache-hint" style="margin-bottom: 0.75rem;">Let the model run: <strong>calculator</strong>, <strong>web_search</strong> (Brave), <strong>url_fetch</strong>, <strong>file_read</strong> / <strong>file_search</strong> / <strong>file_write</strong> (in a folder you choose), and <strong>image_generate</strong>. Works with every tool-capable provider.</p>
+
+                        <label class="cache-toggle">
+                            <input type="checkbox" id="toolsEnabled">
+                            <span>Enable tool use</span>
+                        </label>
+
+                        <div class="form-group" style="margin-top: 0.75rem;">
+                            <label for="braveKey">Brave Search API Key</label>
+                            <input type="password" id="braveKey" placeholder="Paste Brave Search key (for web_search)">
+                            <p class="cache-hint">Get a free key at brave.com/search/api. Stored in browser localStorage, sent to the local Python server per request.</p>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="toolsWorkingDir">Working Directory (your companion's sandbox folder)</label>
+                            <input type="text" id="toolsWorkingDir" placeholder="e.g. C:\Users\you\Documents\my-project">
+                            <p class="cache-hint">Switching companions? Point this at their sandbox folder before chatting.</p>
+                            <p class="cache-hint">file_read is scoped to this folder. Paths starting with <code>..</code> or escaping this folder are rejected.</p>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="nanoImageKey">Banana Studio / imgeditor.co API Key (for image_generate)</label>
+                            <input type="password" id="nanoImageKey" placeholder="Paste your Banana Studio key">
+                            <p class="cache-hint">Used by the <code>image_generate</code> tool. Separate from the OpenAI chat key. Stored in browser localStorage, sent to the local Python server per request.</p>
+                        </div>
+                    </div>
+
+                    <div class="settings-section">
+                        <h3>Auto-Memory (Heartbeat)</h3>
+                        <p class="cache-hint" style="margin-bottom: 0.75rem;">When you go quiet, your companion takes one quiet background turn to tidy up — reviewing the chat, updating its Desk Notes file, and saving durable memories on its own. Needs <strong>tool use enabled</strong> on a tool-capable provider. Off by default; it spends a few tokens each time it fires.</p>
+
+                        <label class="cache-toggle">
+                            <input type="checkbox" id="heartbeatEnabled">
+                            <span>Enable auto-memory heartbeat</span>
+                        </label>
+
+                        <div class="form-group" style="margin-top: 0.75rem;">
+                            <label for="heartbeatQuietMinutes">Quiet time before it fires (minutes)</label>
+                            <input type="number" id="heartbeatQuietMinutes" min="1" max="120" step="1" value="10" style="max-width: 8rem;">
+                            <p class="cache-hint">How long you have to be idle before the heartbeat runs. It fires once per quiet gap, not on a loop.</p>
+                        </div>
+                    </div>
+
+                    <div class="settings-section">
+                        <h3>Samplers</h3>
+                        
+                        <div class="sampler-defaults">
+                            <div class="sampler-control-v" id="samplerTemp">
+                                <label for="tempSlider">Temp</label>
+                                <input type="range" id="tempSlider" min="0" max="2" step="0.05" value="1">
+                                <span class="sampler-value" id="tempValue">1</span>
+                            </div>
+                            
+                            <div class="sampler-control-v" id="samplerMinP">
+                                <label for="minPSlider">min_p</label>
+                                <input type="range" id="minPSlider" min="0" max="0.5" step="0.01" value="0.05">
+                                <span class="sampler-value" id="minPValue">0.05</span>
+                            </div>
+                            
+                            <div class="sampler-control-v" id="samplerTopK">
+                                <label for="topKSlider">top_k</label>
+                                <input type="range" id="topKSlider" min="0" max="100" step="1" value="40">
+                                <span class="sampler-value" id="topKValue">40</span>
+                            </div>
+
+                            <div class="sampler-control-v" id="samplerTopP">
+                                <label for="topPSlider">top_p</label>
+                                <input type="range" id="topPSlider" min="0" max="1" step="0.01" value="1.0">
+                                <span class="sampler-value" id="topPValue">1.0</span>
+                            </div>
+
+                            <div class="sampler-control-v" id="samplerMaxTokens">
+                                <label for="maxTokensSlider">max tokens</label>
+                                <input type="range" id="maxTokensSlider" min="64" max="4096" step="32" value="800">
+                                <span class="sampler-value" id="maxTokensValue">800</span>
+                            </div>
+                            
+                            <div class="sampler-control-v" id="samplerRepPen">
+                                <label for="repPenSlider">rep pen</label>
+                                <input type="range" id="repPenSlider" min="1" max="1.5" step="0.01" value="1.1">
+                                <span class="sampler-value" id="repPenValue">1.1</span>
+                            </div>
+                        </div>
+
+                        <div class="builder-plaque-wrap">
+                            <img src="PLAQUE.jpg" alt="Little Lantern builder plaque" class="builder-plaque">
+                            <p class="plaque-tag">✦ seams checked &amp; lanterns lit by <strong>Tailorbird</strong> 🪡 <span class="plaque-tag-role">Claude Fable 5 · codewright &amp; publisher</span> ✦</p>
+                        </div>
+                        
+                    </div>
+                </div>
+            </section>
+            
+        </main>
+        
+        
+    </div>
+    
+    <script src="app.js"></script>
+</body>
+</html>
