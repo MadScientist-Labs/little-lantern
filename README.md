@@ -95,3 +95,142 @@ This is deliberate: nobody can fence Little Lantern off or resell it as the only
 ## Who's behind it
 
 One person and some AI. Little Lantern is a private alternative for people who want off the big platforms — more control over their own "wrapper," more control over their data, more time with the models they like, and room to use open-weights models that stick around longer with fewer guardrails. No company, no investors, no analytics, no data to sell. There's nothing here to monetise, and that's the point. 🔦
+
+---
+# FAQ / Good Questions
+
+### What kind of computer do I need?
+
+For normal API use, Little Lantern is lightweight.
+
+Little Lantern itself is not running the AI model on your machine. It runs as a local web app in your browser, with a small local server started from the project folder. The AI model runs through whichever provider you choose, using your own API key.
+
+You do **not** need a gaming PC or a powerful GPU just to use Little Lantern with API models.
+
+As a practical guide:
+
+* **8 GB RAM** should be enough for basic use.
+* **16 GB RAM** is more comfortable.
+* More RAM is nice, but Little Lantern itself is not the heavy part.
+
+Your browser, the number of tabs you keep open, and anything else running on your computer will matter more than Little Lantern itself.
+
+### Does Little Lantern include free AI model access?
+
+No.
+
+Little Lantern is free software, but it does not include free access to paid AI models.
+
+You bring your own API key from a supported provider, add credit to that provider account if required, and paste the key into Little Lantern’s Engine Room.
+
+You are paying the AI provider for model use, not paying Little Lantern.
+
+### What providers does it support?
+
+Little Lantern supports multiple API providers, including OpenAI, Anthropic/Claude, Gemini, Mistral, Nous, and OpenRouter.
+
+Provider availability, model names, pricing, context windows, moderation, and reliability can change. Always check the provider’s current information before spending money or moving an important companion setup.
+
+### Does Little Lantern automatically add new models when they are released?
+
+No.
+
+Little Lantern does not automatically update its model list every time a provider releases a new model.
+
+Some provider sections include custom or blank model slots so you can enter a model ID yourself. This is useful when a provider adds a new model before Little Lantern’s built-in list has been updated.
+
+### Can I write my own system prompt?
+
+Yes.
+
+That is one of the main points.
+
+Little Lantern does not add a hidden platform personality prompt on top of your companion. You write your own system prompt.
+
+A template system prompt is included to help you get started. The lower part of the template is already configured for Little Lantern’s tool system, so supported models know how to use the available tools.
+
+You can edit the personality, behaviour, tone, boundaries, and companion setup yourself.
+
+Provider and model rules still apply. Little Lantern does not remove the policies or refusal behaviour of whichever model provider you choose.
+
+### What are the file and memory limits?
+
+Little Lantern is much less restrictive than many hosted companion platforms, but there are only two built-in limits you should know about: Voice and Interaction Example files have a 5k token limit (which is already quite large for a few strong samples), and Desk Notes have a 2k token limit. Everything else is effectively open—you can put as much material as you want into it.
+
+The real limits are:
+
+* your browser storage
+* your model’s context window
+* token cost
+* practical readability
+* how much you want sent to the model every time
+
+Some fields are always loaded into the prompt, so huge always-on text will cost more and may crowd the model’s context.
+
+Memory Books are different. They are designed for longer-term information and can be triggered when relevant, instead of dumping everything into every message.
+
+You do **not** have to build all your memory material at once. Start small, test, and expand gradually.
+
+### Can I upload Little Lantern to a cloud account or rented server so I can use it anywhere?
+
+Little Lantern is designed as a local-first app.
+
+By default, it is meant to run on your own computer, for your own use, through your own browser.
+
+Because it is public-domain software, you can modify or host it elsewhere if you know what you are doing. However, that changes the security and privacy situation.
+
+If you put Little Lantern on a cloud server, rented server, shared hosting service, or public URL, the risk is yours. You would need to handle access control, HTTPS, server security, API key safety, file permissions, and backups yourself.
+
+Do not expose a Little Lantern install publicly without understanding what you are doing.
+
+### I have never used GitHub. How do I download Little Lantern?
+
+You do not need to learn GitHub to download Little Lantern.
+
+1. Go to the Little Lantern GitHub page.
+2. Click the green **Code** button.
+3. Click **Download ZIP**.
+4. Save the ZIP file somewhere you can find it.
+5. Unzip/extract the folder.
+6. Open the extracted Little Lantern folder.
+7. On Windows, double-click `start.bat`.
+8. When Little Lantern opens, read `Little_Lantern_Guides/00_START_HERE.md`.
+
+That guide tells you what to do next.
+
+### Is it hard to set up?
+
+No, but you do need to read the guides.
+
+For most people, basic setup means:
+
+1. Download Little Lantern.
+2. Unzip it.
+3. Run the start file.
+4. Open the starting guide.
+5. Choose an API provider.
+6. Create or open your provider account.
+7. Get an API key.
+8. Add credit to the provider if required.
+9. Paste the API key into Little Lantern’s Engine Room.
+10. Choose a model and test it.
+
+If you are careful and stop to read the guide, expect roughly **20–30 minutes** for basic setup.
+
+### How long does it take to move a companion?
+
+Installing Little Lantern is the quick part.
+
+Moving a companion can take longer.
+
+That depends on how much material you want to bring over: personality, backstory, voice examples, memories, boundaries, project notes, roleplay preferences, worldbuilding, and long-term context.
+
+Little Lantern includes a moving guide with prompts you can give your companion on the platform you are currently using. Those prompts can help create summaries and memory material for the move.
+
+You do not have to do everything at once.
+
+You can start with a simple setup, test it, then gradually add Memory Books and notes as you go.
+
+It is sensible to keep your current platform subscription until you feel comfortable that everything is working the way you want. You can also keep using your current platform for expensive models and use Little Lantern for more freedom, experimentation, or cheaper provider options.
+
+Take your time. The point is control, not panic.
