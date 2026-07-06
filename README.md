@@ -4,6 +4,10 @@ A cosy, private place to talk to AI that lives on **your own computer** — not 
 
 No account. No cloud. No middleman. Just a small app sitting quietly on your machine, talking only to the AI *you* chose, on *your* key.
 
+<p align="center">
+  <img src="assets/front_chat_lumen.png" alt="Little Lantern chat screen showing Lumen victory message" width="900">
+</p>
+
 ---
 
 ## Who it's for
