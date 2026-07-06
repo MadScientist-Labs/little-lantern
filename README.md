@@ -59,7 +59,7 @@ That's also *why* you install it. The install **is** the privacy.
 ---
 ## What's it look like, though?
 
-If you want an album of screen shots, the gist of it is here https://imgur.com/a/qZTht7d
+If you want an album of screen shots, the gist of it is here https://llwyrnsloop.substack.com/p/little-lantern-screen-shots-tour
 Although some of the features are not depicted in the album, it shows the general visual idea of Little Lantern. 
 
 ---
