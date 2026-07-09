@@ -8,6 +8,17 @@ No account. No cloud. No middleman. Just a small app sitting quietly on your mac
   <img src="assets/front_chat_lumen.png" alt="Little Lantern chat screen showing Lumen victory message" width="900">
 </p>
 
+1. Press the green button that says **Code**
+2. From the dropdown menu, select **Download ZIP** and save it.
+3. Extract the ZIP into a folder of your choice.
+
+It should look like this:
+
+<p align="center">
+  <img src="assets/open_first.png" alt="Unzipped Little Lantern folder showing where to open Little Lantern Guides" width="300">
+</p>
+
+Open the **Little Lantern Guides** folder, then start with **00_START_HERE.md**.
 ---
 
 ## Who it's for
