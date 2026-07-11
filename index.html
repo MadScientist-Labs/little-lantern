@@ -376,14 +376,16 @@
             <section class="panel" id="panel-memorybooks">
                 <div class="panel-header">
                     <h2>Memory Books</h2>
-                    
-                    <button class="btn btn-primary" id="newMemoryBookBtn">
-                        + New Memory Book
-                    </button>
                 </div>
                 
                 <div class="memorybook-list" id="memoryBookList">
                     <!-- Memory books load here -->
+                </div>
+
+                <div class="memorybook-actions">
+                    <button class="btn btn-primary" id="newMemoryBookBtn">
+                        + New Memory Book
+                    </button>
                 </div>
                 
                 <!-- Memory Book Editor Modal -->
@@ -537,6 +539,7 @@
                                         <option value="moonshotai/kimi-k2.6">kimi-2.6</option>
                                         <option value="moonshotai/kimi-k2.7-code">kimi-2.7-code (no vision)</option>
                                         <option value="inclusionai/ring-2.6-1t">ring-2.6 (no vision)</option>
+                                        <option value="x-ai/grok-4.5">grok-4.5</option>
                                         <option value="x-ai/grok-4.3">grok-4.3</option>
                                         <option value="z-ai/glm-5.2">glm-5.2 (no vision)</option>
                                         <option value="nvidia/nemotron-3-super-120b-a12b">nemotron-3-super (no vision)</option>
@@ -547,6 +550,15 @@
                                 <div class="form-group" id="openrouterCustomGroup">
                                     <label for="openrouterCustomModel">Custom slug</label>
                                     <input type="text" id="openrouterCustomModel" placeholder="e.g., meta-llama/llama-3-70b-instruct">
+                                </div>
+
+                                <div class="form-group" id="openrouterReasoningGroup">
+                                    <label for="openrouterReasoningEffort">Reasoning Effort (Grok 4.5)</label>
+                                    <select id="openrouterReasoningEffort">
+                                        <option value="low">Low</option>
+                                        <option value="medium">Medium</option>
+                                        <option value="high" selected>High</option>
+                                    </select>
                                 </div>
 
                             </div>
@@ -577,7 +589,13 @@
                                         <option value="claude-opus-4-5">Opus 4.5</option>
                                         <option value="claude-sonnet-4-6">Sonnet 4.6</option>
                                         <option value="claude-sonnet-4-5">Sonnet 4.5</option>
+                                        <option value="__custom__">Custom (enter model ID below)…</option>
                                     </select>
+                                </div>
+
+                                <div class="form-group" id="claudeCustomGroup">
+                                    <label for="claudeCustomModel">Custom model ID</label>
+                                    <input type="text" id="claudeCustomModel" placeholder="e.g., claude-model-version">
                                 </div>
 
                                 <div class="form-group" id="claudeEffortGroup">
@@ -621,7 +639,13 @@
                                     <select id="nousModel">
                                         <option value="Hermes-4-405B">Hermes-4-405B (no vision)</option>
                                         <option value="Hermes-4-70B">Hermes-4-70B (no vision)</option>
+                                        <option value="__custom__">Custom (enter model ID below)…</option>
                                     </select>
+                                </div>
+
+                                <div class="form-group" id="nousCustomGroup">
+                                    <label for="nousCustomModel">Custom model ID</label>
+                                    <input type="text" id="nousCustomModel" placeholder="e.g., Hermes-model-version">
                                 </div>
 
                             </div>
@@ -654,7 +678,16 @@
                                         <option value="gpt-5.4-2026-03-05">5.4</option>
                                         <option value="gpt-5.4-mini-2026-03-17">5.4-mini</option>
                                         <option value="gpt-5.5-2026-04-23">5.5</option>
+                                        <option value="gpt-5.6">5.6 Sol</option>
+                                        <option value="gpt-5.6-terra">5.6 Terra</option>
+                                        <option value="gpt-5.6-luna">5.6 Luna</option>
+                                        <option value="__custom__">Custom (enter model ID below)…</option>
                                     </select>
+                                </div>
+
+                                <div class="form-group" id="openaiCustomGroup">
+                                    <label for="openaiCustomModel">Custom model ID</label>
+                                    <input type="text" id="openaiCustomModel" placeholder="e.g., gpt-model-version">
                                 </div>
 
                                 <div class="form-group">
@@ -666,13 +699,14 @@
                                 </div>
 
                                 <div class="form-group" id="reasoningEffortGroup">
-                                    <label for="openaiReasoningEffort">Reasoning Effort (GPT-5.1 / 5.4 / 5.5)</label>
+                                    <label for="openaiReasoningEffort">Reasoning Effort (GPT-5.1 / 5.4 / 5.5 / 5.6)</label>
                                     <select id="openaiReasoningEffort">
                                         <option value="none">None</option>
                                         <option value="low">Low</option>
                                         <option value="medium" selected>Medium</option>
                                         <option value="high">High</option>
                                         <option value="xhigh">xHigh</option>
+                                        <option value="max" id="openaiReasoningMax">Max (GPT-5.6 only)</option>
                                     </select>
                                 </div>
 
@@ -703,7 +737,13 @@
                                         <option value="gemini-3.5-flash">3.5 Flash</option>
                                         <option value="gemini-3.1-flash-lite">3.1 Flash Lite</option>
                                         <option value="gemini-3.1-pro-preview">3.1 Pro</option>
+                                        <option value="__custom__">Custom (enter model ID below)…</option>
                                     </select>
+                                </div>
+
+                                <div class="form-group" id="geminiCustomGroup">
+                                    <label for="geminiCustomModel">Custom model ID</label>
+                                    <input type="text" id="geminiCustomModel" placeholder="e.g., gemini-model-version">
                                 </div>
 
                                 <p class="cache-hint">Prompt caching is automatic for Gemini — handled for you, nothing to set.</p>
@@ -730,7 +770,13 @@
                                         <option value="mistral-medium-3-5">Mistral Med 3.5</option>
                                         <option value="devstral-2512">Devstral 2 (no vision)</option>
                                         <option value="mistral-large-2512">Mistral Large</option>
+                                        <option value="__custom__">Custom (enter model ID below)…</option>
                                     </select>
+                                </div>
+
+                                <div class="form-group" id="mistralCustomGroup">
+                                    <label for="mistralCustomModel">Custom model ID</label>
+                                    <input type="text" id="mistralCustomModel" placeholder="e.g., mistral-model-version">
                                 </div>
 
                                 <p class="cache-hint">Prompt caching is automatic for Mistral — handled for you, nothing to set.</p>

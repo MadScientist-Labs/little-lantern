@@ -3,7 +3,7 @@
 ## What This Is
 A vanilla HTML/CSS/JS chat frontend for non-coders to connect to multiple LLM API providers. No frameworks. Single-page app with tabbed navigation. localStorage for state. Bring your own API keys, pick a provider, chat.
 
-## Build Status (updated 2026-07-01) — READ BEFORE TRUSTING THE CHECKBOXES
+## Build Status (updated 2026-07-11) — READ BEFORE TRUSTING THE CHECKBOXES
 
 **Nearly every "Known Issue" and Priority 1–6 item below is DONE.** Do NOT read an unchecked box as "not built" without checking the code first — the boxes badly lagged reality and that repeatedly misled sessions (Claude/Nous/OpenAI, GM Notes, ASCII rendering, the file importer, DPO-on-reroll were all built but marked otherwise).
 
@@ -19,11 +19,15 @@ A vanilla HTML/CSS/JS chat frontend for non-coders to connect to multiple LLM AP
 
 **Built 2026-07-01 (evening) / 2026-07-02:** **Heartbeat receipts** — each beat records which tools it actually called (`currentChat.heartbeatReceipts`, cap 6, injected as `### Heartbeat receipts:` next to the memory ledger in both prompt paths); live-tested PASS on real autonomous work. **"Current Context" renamed to "Desk Notes"** in ALL display text, prompt-injection headers (`### Desk Notes:`), and docs — it collided with SillyTavern's "recent context" (context-window meaning). **Internal identifiers deliberately unchanged** (`currentContextWorkingFile`, `getCurrentContextContent()`, `CURRENT_CONTEXT_MAX_CHARS`, DOM id `characterCurrentContextWorking`) — display-only rename, same pattern as Characters→Companions; do NOT "fix" the mismatch.
 
+**Built 2026-07-10:** GPT-5.6 Sol/Terra/Luna added to OpenAI with reasoning detection and a 5.6-only `max` effort option; Grok 4.5 added through OpenRouter with a Low/Medium/High reasoning selector (High default). Every public provider now has a persistent custom model-ID slot so same-provider model names can be used without another dropdown edit (request-shape changes still require code). The **+ New Memory Book** button moved below the book list. Gemini 3.5 Pro is documented as coming soon but is not hardcoded until Google publishes its exact Gemini API ID.
+
+**Documented 2026-07-11:** the README FAQ now makes the remote-use boundary explicit. Little Lantern does not become cloud-ready by uploading the folder; cloud hosting requires coding changes and production infrastructure. Telegram integration likewise requires custom development. The official release remains local-only, while CC0 forks are welcome to add remote hosting or integrations at the fork builder's own security, privacy, cost, testing, and maintenance responsibility.
+
 **Still pending:** the fresh public repo with clean history — the last release step (live click-through test DONE 2026-07-01). `BUILD_HANDOFF.md` stays private/untracked; `_not_for_ship/` and live key files must stay out of shipping commits.
 
 ## Public Safety Stance — Read This First
 
-This is **not** an always-on assistant. Do **not** add and do **not** suggest adding:
+The official Little Lantern release is **not** an always-on assistant. Do **not** add the following to the standard app unless Babs explicitly changes the project scope:
 
 - Email, messaging, or auto-reply
 - Slack, Discord, Telegram, WhatsApp, SMS
@@ -31,6 +35,8 @@ This is **not** an always-on assistant. Do **not** add and do **not** suggest ad
 - Calendar, contacts, smart home, IoT, or device control
 - Remote control, webhooks, or anything that listens for incoming messages
 - Always-on background services that check accounts, read messages, wait for outside contact, control devices, or run scheduled automation
+
+This boundary governs the official release, not what other people may build from the CC0 code. Users are welcome to create cloud-hosted versions, Telegram integrations, or other substantial modifications in their own forks. Documentation may explain that freedom and warn about the engineering and security responsibilities involved. Treat those versions as separate custom-development projects; do not implement them in this repository without an explicit scope change.
 
 The app runs locally on `127.0.0.1:3000` and only makes outbound HTTP requests to AI providers, search APIs, and image generation APIs. Keep it that way.
 
@@ -65,7 +71,7 @@ See `API_REFERENCE.md` for **exact parameters, endpoints, headers, and model str
 
 The five original build issues are fixed. Keep these constraints in mind:
 
-1. **Claude** — `callClaude()` sends a proper `messages` array + separate `system`. Opus 4.5/4.6 + Sonnet 4.5/4.6 use samplers (the UI sends **temperature only**). Adaptive/effort models (`claude-sonnet-5`, Opus 4.7/4.8, Fable 5) **reject samplers** and use `output_config: {effort}`; Opus 4.7/4.8 also send `thinking: {type:"adaptive"}`. **Never send both `temperature` and `top_p` to Claude.**
+1. **Claude** — `callClaude()` sends a proper `messages` array + separate `system`. Opus 4.5/4.6 + Sonnet 4.5/4.6 use samplers (the UI sends **temperature only**). Adaptive/effort models (`claude-sonnet-5`, Opus 4.7/4.8, Fable 5) **reject samplers** and use `output_config: {effort}`; Opus 4.7/4.8 also send `thinking: {type:"adaptive"}`. **Never send both `temperature` and `top_p` to Claude.** Custom model IDs preserve names but do not infer new request semantics.
 2. **Nous** — fixed; logs full error-response bodies; OpenAI-compatible tools wired. Models: `Hermes-4-405B`, `Hermes-4-70B`.
 3. **Message formatting** — `buildMessages()` produces proper `{system, messages}`; the system prompt now goes through the real `system` channel for every API provider. `buildPrompt()` stays only for local/RunPod.
 4. **top_p slider** — exists. Samplers now live as one persistent slider set in the Machine Room (not a separate sidebar).

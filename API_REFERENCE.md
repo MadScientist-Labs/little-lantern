@@ -1,6 +1,6 @@
 # API Reference - Little Lantern Provider Wiring
 
-Verified against the app code on 2026-06-30. This file is the project source of truth for what Little Lantern currently sends. If provider docs change, update the provider adapter in `app.js` and this file together.
+Verified against the app code on 2026-07-10. This file is the project source of truth for what Little Lantern currently sends. If provider docs change, update the provider adapter in `app.js` and this file together.
 
 Little Lantern is a local browser app. Most model calls are made directly from `app.js` to the provider API. The local Python server in `start.py` serves the app and proxies only local tool endpoints such as web search, URL fetch, file read/search/write, and image generation.
 
@@ -11,6 +11,7 @@ Little Lantern is a local browser app. Most model calls are made directly from `
 - Do not send unsupported sampler fields. Provider 400s are usually caused by stray parameters.
 - Do not rename the `msl-` localStorage keys without a migration.
 - API keys live in browser localStorage. JSON backup/export deliberately excludes them.
+- Every public provider has a persistent custom model-ID field. This lets users select a same-provider model that is absent from the curated dropdown, but it does not adapt request parameters or endpoints when a provider changes its API contract.
 
 ## Local llama.cpp / RunPod (Hidden Public UI)
 
@@ -64,6 +65,7 @@ Supported public models in the dropdown:
 - `claude-opus-4-5` - Opus 4.5
 - `claude-sonnet-4-6` - Sonnet 4.6
 - `claude-sonnet-4-5` - Sonnet 4.5
+- plus the persistent custom model-ID field
 
 Request rules:
 
@@ -154,12 +156,17 @@ Supported public models in the dropdown:
 - `gpt-5.4-2026-03-05` - 5.4
 - `gpt-5.4-mini-2026-03-17` - 5.4-mini
 - `gpt-5.5-2026-04-23` - 5.5
+- `gpt-5.6` - 5.6 Sol (`gpt-5.6` aliases `gpt-5.6-sol`)
+- `gpt-5.6-terra` - 5.6 Terra
+- `gpt-5.6-luna` - 5.6 Luna
+- plus the persistent custom model-ID field
 
 Thinking model detection:
 
-- `isOpenAIThinkingModel()` returns true for the o-series (`/^o[1-9]/`) and `gpt-5.1`, `gpt-5.4`, `gpt-5.5`.
+- `isOpenAIThinkingModel()` returns true for the o-series (`/^o[1-9]/`) and `gpt-5.1`, `gpt-5.4`, `gpt-5.5`, `gpt-5.6`.
 - Thinking models skip `temperature` and `top_p`.
 - Thinking models send `reasoning: { "effort": value }` when effort is not `none`.
+- GPT-5.6 supports `none`, `low`, `medium`, `high`, `xhigh`, and `max`; the UI exposes `max` only while a GPT-5.6 model is selected.
 - Responses API thinking calls add `OPENAI_REASONING_RESERVE` to the user's max-token slider so hidden reasoning cannot starve the visible answer.
 
 Responses API request shape:
@@ -225,6 +232,7 @@ Supported public models in the dropdown:
 
 - `Hermes-4-405B`
 - `Hermes-4-70B`
+- plus the persistent custom model-ID field
 
 Request rules:
 
@@ -275,6 +283,7 @@ Curated dropdown models:
 - `moonshotai/kimi-k2.6`
 - `moonshotai/kimi-k2.7-code`
 - `inclusionai/ring-2.6-1t`
+- `x-ai/grok-4.5`
 - `x-ai/grok-4.3`
 - `z-ai/glm-5.2`
 - `nvidia/nemotron-3-super-120b-a12b`
@@ -285,6 +294,7 @@ Request rules:
 - OpenAI-compatible chat completions shape.
 - Send `temperature`, `top_p`, and `max_tokens`.
 - Send `top_k` only when the selected route is not `anthropic/*` or `openai/*`.
+- Grok 4.5 reasoning is mandatory on OpenRouter. `isOpenRouterGrokThinkingModel()` matches `x-ai/grok-4.5*` and `~x-ai/grok-latest`, then sends `reasoning: { "effort": "low|medium|high" }`. The UI defaults to `high`, matching OpenRouter's current model metadata.
 - Do not send cache controls; OpenRouter routing makes prompt caching unreliable.
 - Tools use OpenAI Chat Completions `tools` / `tool_calls` format.
 
@@ -318,6 +328,9 @@ Supported public models in the dropdown:
 - `gemini-3.5-flash`
 - `gemini-3.1-flash-lite`
 - `gemini-3.1-pro-preview`
+- plus the persistent custom model-ID field
+
+As of 2026-07-10, Google describes Gemini 3.5 Pro as coming soon but has not published a Gemini API model ID. Do not hardcode the speculative `gemini-3.5-pro` string; use the custom field once Google exposes the exact ID.
 
 Request rules:
 
@@ -397,6 +410,7 @@ Supported public models in the dropdown:
 - `mistral-medium-3-5`
 - `devstral-2512`
 - `mistral-large-2512`
+- plus the persistent custom model-ID field
 
 Request rules:
 
@@ -465,7 +479,7 @@ Tool safety notes:
 - Gemini: one `generateContent` call with `maxOutputTokens: TEST_CONNECTION_MAX_TOKENS`
 - Mistral: one chat completion with `max_tokens: TEST_CONNECTION_MAX_TOKENS`
 
-`TEST_CONNECTION_MAX_TOKENS` is currently `64`. The validation call may cost a small number of tokens. A successful status means the key/model/API route accepted the request; it does not judge response quality.
+`TEST_CONNECTION_MAX_TOKENS` is currently `64`. The validation call may cost a small number of tokens. A blank custom model ID is rejected locally before any request is sent. A successful status means the key/model/API route accepted the request; it does not judge response quality.
 
 ## Parameter Support Matrix
 
@@ -477,7 +491,7 @@ Tool safety notes:
 | min_p | yes | no | no | no | no | no | no | no | no |
 | rep_pen | yes | no | no | no | no | no | no | no | no |
 | max_tokens | yes | yes | yes | yes* | yes* | yes | yes | yes** | yes |
-| reasoning / effort | no | no | yes | no | yes | no | no | no | no |
+| reasoning / effort | no | no | yes | no | yes | no | Grok 4.5 only | no | no |
 | tools | no | yes | yes | yes | yes | yes | yes | yes | yes |
 
 `*` OpenAI Responses uses `max_output_tokens`; Chat Completions uses `max_tokens`.

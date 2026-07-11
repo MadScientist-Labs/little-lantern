@@ -833,6 +833,12 @@ select {
     overflow-y: auto;
 }
 
+.memorybook-actions {
+    padding: 0 var(--space-lg) var(--space-lg);
+    display: flex;
+    justify-content: flex-end;
+}
+
 .memorybook-item {
     background: var(--bg-medium);
     border: 1px solid var(--border);

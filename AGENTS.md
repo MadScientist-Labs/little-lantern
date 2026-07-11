@@ -8,7 +8,7 @@ This file is for GPT-family or Codex-family coding agents working on this reposi
 
 This is **not** an assistant framework, not a server daemon, not a background process. It is a single-page web app the user runs on their own machine.
 
-## Build Status (updated 2026-07-01) — check the code before trusting any checkbox
+## Build Status (updated 2026-07-11) — check the code before trusting any checkbox
 
 The app itself is feature-complete. **Built and working:** all six API providers (OpenAI, Claude, Nous, OpenRouter, Gemini, Mistral) with proper `system` + `messages` formatting; structured tools (calculator, web_search, url_fetch, file_read, file_search, file_write, image_generate, memory_add) on tool-capable providers; per-model sampler/effort handling; finalised model dropdowns; the GM Notes hidden channel; a cumulative token odometer; and prompt caching where supported. **Newer additions (all in `app.js`):** the auto-memory engine (`memory_add` + a per-companion Desk Notes file read fresh each turn), an idle **heartbeat** (off by default), full **JSON state export/import** (API keys excluded), top-bar token spend, and a ❓ Help modal. A private beta went out 2026-06-15; beta-feedback fixes landed 2026-06-22.
 
@@ -20,13 +20,17 @@ The app itself is feature-complete. **Built and working:** all six API providers
 
 **Done 2026-07-01 (evening) / 2026-07-02:** **Heartbeat receipts** — each beat records which tools it actually called (`currentChat.heartbeatReceipts`, injected as `### Heartbeat receipts:` alongside the memory ledger); live-tested. **"Current Context" renamed to "Desk Notes"** in all display text, prompt-injection headers, and docs (it collided with SillyTavern's "recent context"). **Internal identifiers deliberately unchanged** (`currentContextWorkingFile`, `getCurrentContextContent()`, `CURRENT_CONTEXT_MAX_CHARS`, DOM id `characterCurrentContextWorking`) — display-only rename; do NOT rename the internals.
 
+**Done 2026-07-10:** GPT-5.6 Sol/Terra/Luna added to OpenAI with reasoning detection and a 5.6-only `max` effort option; Grok 4.5 added through OpenRouter with a Low/Medium/High reasoning selector (High default). Every public provider now has a persistent custom model-ID slot so same-provider model names can be used without another dropdown edit (request-shape changes still require code). The **+ New Memory Book** button moved below the book list. Gemini 3.5 Pro is documented as coming soon but is not hardcoded until Google publishes its exact Gemini API ID.
+
+**Documented 2026-07-11:** the README FAQ now makes the remote-use boundary explicit. Little Lantern does not become cloud-ready by uploading the folder; cloud hosting requires coding changes and production infrastructure. Telegram integration likewise requires custom development. The official release remains local-only, while CC0 forks are welcome to add remote hosting or integrations at the fork builder's own security, privacy, cost, testing, and maintenance responsibility.
+
 **Still pending:** the fresh public repo with clean history — the last release step (live click-through test DONE 2026-07-01). `BUILD_HANDOFF.md` stays private/untracked; `_not_for_ship/` and live key files must stay out of shipping commits.
 
 The live, session-by-session record is **`BUILD_HANDOFF.md`** (kept untracked, not for shipping). Read it for the current picture. This `AGENTS.md` and `CLAUDE.md` are kept in sync — they carry the same project truth, addressed to different readers.
 
 ## Boundaries — Read This Before Adding Anything
 
-The app must remain a **local-only frontend that makes outbound API calls only**. Do not add and do not propose adding:
+The official Little Lantern release in this repository must remain a **local-only frontend that makes outbound API calls only**. Do not add the following to the standard app unless Babs explicitly changes the project scope:
 
 - Email, SMS, phone, Slack, Discord, Telegram, WhatsApp
 - Calendar, contacts, smart-home, IoT, device control
@@ -34,6 +38,8 @@ The app must remain a **local-only frontend that makes outbound API calls only**
 - Always-listening or always-on background services
 - Scheduled automation that runs without an active user
 - Anything that polls personal accounts or waits for outside contact
+
+This boundary governs the official release, not what other people may build from the CC0 code. Users are welcome to create cloud-hosted versions, Telegram integrations, or other substantial modifications in their own forks. Documentation may explain that freedom and warn about the engineering and security responsibilities involved. Treat those versions as separate custom-development projects; do not implement them in this repository without an explicit scope change.
 
 In-scope outbound calls only:
 

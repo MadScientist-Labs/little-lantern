@@ -4,6 +4,10 @@ A cosy, private place to talk to AI that lives on **your own computer** — not 
 
 No account. No cloud. No middleman. Just a small app sitting quietly on your machine, talking only to the AI *you* chose, on *your* key.
 
+## Community software — not a commercial product or hosted service
+
+Little Lantern is community software released into the public domain. You are welcome to modify it, build integrations, host your own version, and share what you create. The standard release is designed for local use; custom versions require their own setup, security, maintenance, and technical support.
+
 <p align="center">
   <img src="assets/front_chat_lumen.png" alt="Little Lantern chat screen showing Lumen victory message" width="900">
 </p>
@@ -71,7 +75,7 @@ That's also *why* you install it. The install **is** the privacy.
 ## What's it look like, though?
 
 If you want an album of screen shots, the gist of it is here https://llwyrnsloop.substack.com/p/little-lantern-screen-shots-tour
-Although some of the features are not depicted in the album, it shows the general visual idea of Little Lantern. 
+Although some of the features are not depicted in the album, it shows the general visual idea of Little Lantern.
 
 ---
 
@@ -198,11 +202,21 @@ Little Lantern is designed as a local-first app.
 
 By default, it is meant to run on your own computer, for your own use, through your own browser.
 
+Little Lantern will not work on a cloud server simply by uploading the folder. It was built as a local application, so cloud hosting requires coding changes and proper server infrastructure.
+
 Because it is public-domain software, you can modify or host it elsewhere if you know what you are doing. However, that changes the security and privacy situation.
 
 If you put Little Lantern on a cloud server, rented server, shared hosting service, or public URL, the risk is yours. You would need to handle access control, HTTPS, server security, API key safety, file permissions, and backups yourself.
 
 Do not expose a Little Lantern install publicly without understanding what you are doing.
+
+### Can I connect Little Lantern to Telegram?
+
+Yes. Little Lantern is public-domain software, so you may modify it, host it elsewhere, or build integrations for it.
+
+Telegram support is not included in the standard version. Adding it requires a coder because Little Lantern was built as a local, single-user application. A remote integration needs proper authentication, secure bot-token and API-key handling, access controls, file protection, spending limits, testing, and ongoing maintenance.
+
+You can use coding tools such as Codex, Claude Code, Cursor, or Grok to help build your version. However, you — or the coder working with you — are responsible for understanding, testing, and securing the finished system.
 
 ### I have never used GitHub. How do I download Little Lantern?
 

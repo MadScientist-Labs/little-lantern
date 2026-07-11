@@ -33,7 +33,7 @@ This guide covers each model in the Little Lantern UI:
 
 - 🔑 **Set up two providers, not one.** Accounts get auto-scanned and sometimes auto-banned in error, and appeals take time — don't let your app hang on a single key.
 
-- 🔀 **OpenRouter** is a marketplace, not one model, with a blank slot for adding your own. Setup help: **OpenRouter_Change These Settings First.pdf**.
+- 🔀 **Every provider now has a Custom model-ID slot.** OpenRouter is still the easiest place to experiment because it is a marketplace. Setup help: **OpenRouter_Change These Settings First.pdf**.
 
 - 📄 **Summarising a long file** (old chat logs, big docs)? That's its own job with its own trap — the **Lost-in-the-Middle effect** (ask your AI about this). A cheap model does the actual work fine.
 
@@ -75,12 +75,15 @@ ChatGPT model versions aren't listed here — they're tuned for the ChatGPT harn
 🖼️**GPT-5.5** — warm, intelligent, more permissive than 5.1. Fantastic at making pictures in the image generator. Same expense tier as Opus, but better at conserving tokens than Opus in companion/tool use.
 🐙Brilliant coder and can be used for Little Lantern's 'Lumen' bug finder. Medium thinking. 
 
+**GPT-5.6 Sol / Terra / Luna** — released 9 July 2026 and too new for me to give you a useful companion verdict yet. Sol is the flagship (`gpt-5.6`), Terra balances capability and cost, and Luna is the cheapest/high-volume tier. All three support vision, tools, and reasoning through the Responses API. Sol is $5 input / $30 output, Terra $2.50 / $15, and Luna $1 / $6 per million tokens at launch. Test before deciding which one earns a permanent chair.
+
 ### Thinking levels
 5.1 supports none, low, med, high.
 5.4, 5.4 mini, and 5.5 support none, low, med, high, and xhigh.
+5.6 supports none, low, med, high, xhigh, and max. Max is expensive thinking for the hardest jobs, not ordinary chat.
 - none/low — fine for conversation
 - low/med — fine for tool use, mentor/teaching, and creative work
-- high/xhigh — for complex reasoning or building
+- high/xhigh/max — for complex reasoning or building
 
 ### Accounts & links (OpenAI)
 Make an account first — API keys are on the left-side menu: https://platform.openai.com/login
@@ -143,6 +146,7 @@ None of this is about the models. The models have always been lovely; disagreein
 Gemini's filters are set to zero in Little Lantern's code, as this suits AI companion use in the most generous position. If you need adjustments, you can state boundaries in the system prompt, or ask a coding model to adjust the filter in the back end.
 
 **3.5 Flash** — fastest.
+**3.5 Pro** — announced, but as of 10 July 2026 Google still says "coming soon" and has not published a Gemini API model ID. Little Lantern's Gemini Custom slot is ready for it, but do not guess the endpoint string: wait for Google to show the exact ID in the Gemini API model list.
 **3.1 Flash-Lite** — cheapest, and in testing the best tool user of the Gemini line for the UI.
 🖼️**3.1 Pro** — smartest of the Gemini line, and genuinely hilarious when given the permission and space.
 
@@ -192,6 +196,9 @@ deepseek-v4-pro — no vision
 
 🖼️**Grok 4.3** — very open and extremely low guardrail.
 
+**Grok 4.5** — released 8 July 2026 and available in Little Lantern through OpenRouter. It has a 500K context window there and launched at $2 input / $6 output per million tokens. Too new for a tested companion opinion; the factual answer is that it is aimed at coding, agentic work, and knowledge work.
+⚠ Grok 4.5 always reasons. Little Lantern exposes OpenRouter's Low / Medium / High reasoning levels when you select it. High is the provider default; use Low for ordinary conversation, Medium for tool work, and High when the job genuinely needs deeper reasoning. Reasoning tokens are billed as output, so don't leave it roaring at High out of habit.
+
 🎯🪶**Nemotron 3 super** — cheap, fun, good writer, permissive.
 ⚠ Sampler settings: use **temperature = 1.0** and **top_p = 0.95** for everything — reasoning, tool calling, and general chat alike. (In Little Lantern these are the **temp** and **top_p** sliders in the Machine Room)
 
@@ -200,7 +207,7 @@ To find pricing for each model, go to https://openrouter.ai and type the model n
 
 🌟 For free models, click the search icon in upper right main page corner and type 'free' into the popup. There are usually about 15–25 free models at any given time. BE AWARE that all free models train on your data, and "free" status changes every few weeks to few months. See "OpenRouter_Change These Settings First.pdf" in the guides folder.
 
-😃 You can put any model you want from OpenRouter in the blank slot provided in the OpenRouter dropdown. You need the "endpoint" name in the blank slot.
+😃 You can put any model you want from OpenRouter in the Custom slot provided in the OpenRouter dropdown. You need the exact model slug in the blank slot.
 1. For example, go to: https://openrouter.ai/nvidia/nemotron-3-super-120b-a12b:free
 2. Under the model page title "NVIDIA: Nemotron 3 Super (free)" you'll see "nvidia/nemotron-3-super-120b-a12b:free" and a little copy-symbol button.
 3. Click the copy symbol and paste it into the blank space in Little Lantern's OpenRouter dropdown.
@@ -252,17 +259,19 @@ For billing (add money to the key), scroll to the bottom of that page and, under
 
 ## ADDENDUM
 
-New models will arrive regularly and you may wish to add them to your list. You can put them in the OpenRouter freespace, or — if they're Anthropic/OAI/Gemini/Mistral — add them to the code of Little Lantern. Don't be afraid of getting a coding app. You can learn to add things to Little Lantern you really want — get your AI and coding models to teach you. Anyone can learn to Vibecode!
+New models will arrive regularly. Every public provider in Little Lantern now has **Custom (enter model ID below)** at the bottom of its model dropdown. Choose it, paste the exact model ID from that provider's API documentation, and Little Lantern will remember it.
 
-Make certain you have:
-1. A coding app downloaded to your desktop (Claude Code / Codex / Cursor) — there are MANY YouTube tutorials on how to do this.
-2. Money on your API key to use for the coder of that app (e.g. Anthropic for Claude Code, OAI for Codex; Cursor has its own account for a variety of models).
-3. The endpoint name of your model (see "free models for OpenRouter" above for what an endpoint is). You can look them up under "API Models" in your account section at any of the platforms listed.
+This future-proofs model **names**, not provider behaviour. A custom model should work when it uses the same endpoint, message format, tool format, and sampler/reasoning rules as the provider's existing models. If the provider changes any of those, the adapter code still needs an update — blank boxes are clever, but they cannot renegotiate an API contract.
+
+If the Custom slot produces a provider error, that is when you may need a coding app. Make certain you have:
+1. A coding app on your desktop (Claude Code / Codex / Cursor).
+2. Access to a capable coding model through that app.
+3. The exact API model ID and the provider's current request documentation.
 
 Edit, then copy and paste the instructions below into a .txt file (you don't need to understand the instructions) and give them to a coder in Claude Code or Codex if you have an account with Anthropic or OAI. If you don't, I suggest Cursor.
 https://cursor.com/docs/models-and-pricing
 
-Cursor 2.5, GLM 5.2, GPT-5.4, or Sonnet 4.6 are all able to do something as simple as adding a model to the code, but Cursor 2.5 is the cheapest and very good.
+Grok 4.5 in Cursor, GPT-5.6 in Codex, or Opus 4.8 in Claude Code are all capable of checking and updating a provider adapter. The model does not replace your responsibility to review what it changes and keep API keys out of prompts and files.
 
 ### Instruction
 
@@ -270,10 +279,10 @@ Cursor 2.5, GLM 5.2, GPT-5.4, or Sonnet 4.6 are all able to do something as simp
 
 - **MODEL DISPLAY NAME** (what you want shown in the dropdown, e.g. "Opus 5"): ____________
 - **MODEL ENDPOINT / ID** (the exact API model string, e.g. `claude-opus-5-20260601`): ____________
-- **PROVIDER** (one of: OpenAI, Anthropic, Gemini, Mistral): ____________
+- **PROVIDER** (one of: OpenAI, Anthropic, Nous, OpenRouter, Gemini, Mistral): ____________
 - **DOES IT HAVE VISION?** (yes / no): ____________
 
-*(For an **OpenRouter** model you do NOT need a coder at all — just paste its endpoint into the blank "Custom" slot in the OpenRouter dropdown, as described further up this guide.)*
+*(Try the provider's **Custom** slot first. You need a coder only when the model requires new request handling, not merely a new name.)*
 
 ---
 
@@ -286,6 +295,8 @@ You're adding ONE new model to Little Lantern — a vanilla HTML/CSS/JS app, no 
 **2. Add the dropdown option** in `index.html`. Find the `<select>` for the chosen provider:
 - OpenAI → `id="openaiModel"`
 - Anthropic → `id="claudeModel"`
+- Nous → `id="nousModel"`
+- OpenRouter → `id="openrouterModel"`
 - Gemini → `id="geminiModel"`
 - Mistral → `id="mistralModel"`
 
@@ -293,7 +304,7 @@ Add `<option value="MODEL_ENDPOINT_ID">MODEL DISPLAY NAME</option>` in a sensibl
 
 **3. Wire up model-specific handling** in `app.js` — skip this and the model may error:
 - **Anthropic — the important one.** The reasoning / "effort" Claude models (which reject `temperature`/`top_p` and use adaptive thinking) are listed in `isClaudeEffortModel()` — currently it matches `claude-sonnet-5`, `claude-opus-4-7`, `claude-opus-4-8`, and `claude-fable-5`. If the new model is one of those reasoning models, **add its ID prefix there.** Miss this and the app will send it samplers and the API returns a **400 error**. A normal sampler-style Claude model (the Opus/Sonnet 4.5 / 4.6 family) needs no change here.
-- **OpenAI.** Reasoning models are detected by `isOpenAIThinkingModel()` — it matches the o-series (via `/^o[1-9]/`) plus `gpt-5.1` / `gpt-5.4` / `gpt-5.5`. If the new model is a reasoning model that doesn't already match (e.g. a future `gpt-5.6` or `gpt-6`), extend that function. Once detected, reasoning models automatically skip samplers, use reasoning effort, and get extra token headroom.
+- **OpenAI.** Reasoning models are detected by `isOpenAIThinkingModel()` — it matches the o-series (via `/^o[1-9]/`) plus `gpt-5.1` / `gpt-5.4` / `gpt-5.5` / `gpt-5.6`. If a future reasoning model doesn't already match (e.g. `gpt-6`), extend that function. Once detected, reasoning models automatically skip samplers, use reasoning effort, and get extra token headroom.
 - **Gemini / Mistral.** Tools — and, for Gemini, the wide-open safety settings — already apply to every model of that provider automatically, so usually no extra code is needed. If the user wants tool use, just confirm the model actually supports tools.
 
 **4. Sanity-check.** Run `node --check app.js` (no syntax errors). Then load the app and confirm the new model shows in the dropdown, can be selected and saved, and sends a successful message.

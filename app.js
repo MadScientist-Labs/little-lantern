@@ -9,7 +9,7 @@ const state = {
         endpoints: {
             local: { enabled: true, url: 'http://localhost:8080' },
             runpod: { enabled: false, url: '' },
-            openrouter: { enabled: false, key: '', model: 'deepseek/deepseek-v4-pro' },
+            openrouter: { enabled: false, key: '', model: 'deepseek/deepseek-v4-pro', reasoningEffort: 'high' },
             claude: { enabled: false, key: '', model: 'claude-opus-4-6', effort: 'medium', cacheEnabled: true, cacheTtl: '5m' },
             nous: { enabled: false, key: '', model: 'Hermes-4-405B' },
             openai: { enabled: false, key: '', model: 'gpt-5.1-2025-11-13', useResponsesApi: true, reasoningEffort: 'medium', cacheEnabled: true },
@@ -150,15 +150,8 @@ function loadState() {
                 state.settings = { ...state.settings, ...parsed.settings };
             }
 
-            // Migration: fix outdated model strings from old localStorage
-            const validClaude = ['claude-sonnet-5', 'claude-fable-5', 'claude-opus-4-8', 'claude-opus-4-7', 'claude-opus-4-6', 'claude-opus-4-5', 'claude-sonnet-4-6', 'claude-sonnet-4-5'];
-            if (state.settings.endpoints.claude && !validClaude.includes(state.settings.endpoints.claude.model)) {
-                state.settings.endpoints.claude.model = 'claude-opus-4-6';
-            }
-            const validNous = ['Hermes-4-405B', 'Hermes-4-70B'];
-            if (state.settings.endpoints.nous && !validNous.includes(state.settings.endpoints.nous.model)) {
-                state.settings.endpoints.nous.model = 'Hermes-4-405B';
-            }
+            // Unknown model IDs are intentional: every public provider now has a
+            // persistent custom-model slot. Do not replace them with curated defaults.
 
             // Migration: character card field changes (P3)
             // Remove deprecated firstMessage/safety, ensure systemPromptFile exists
@@ -531,7 +524,15 @@ function isOpenAIThinkingModel(model) {
     if (/^o[1-9]/.test(model)) return true;
     return model.startsWith('gpt-5.1')
         || model.startsWith('gpt-5.4')
-        || model.startsWith('gpt-5.5');
+        || model.startsWith('gpt-5.5')
+        || model.startsWith('gpt-5.6');
+}
+
+// OpenRouter reports Grok 4.5 reasoning as mandatory, default-on, and
+// configurable at low / medium / high effort.
+function isOpenRouterGrokThinkingModel(model) {
+    if (!model) return false;
+    return model.startsWith('x-ai/grok-4.5') || model.startsWith('~x-ai/grok-latest');
 }
 
 // === Sampler Controls ===
@@ -1641,6 +1642,10 @@ async function callEndpoint(messageData) {
     try {
         let result;
 
+        if (endpoint !== 'local' && endpoint !== 'runpod' && !config?.model) {
+            throw new Error('Model not set. Choose a model or enter a custom model ID in the Machine Room.');
+        }
+
         if (endpoint === 'local' || endpoint === 'runpod') {
             result = await callLlamaCpp(config.url, messageData, samplers);
         } else if (endpoint === 'openrouter') {
@@ -2185,6 +2190,9 @@ async function callOpenRouter(config, messageData, samplers) {
             max_tokens: samplers.max_tokens,
             top_p: samplers.top_p
         };
+        if (isOpenRouterGrokThinkingModel(config.model)) {
+            body.reasoning = { effort: config.reasoningEffort || 'high' };
+        }
         // Strip top_k when OpenRouter routes to a provider that doesn't accept it.
         if (PROVIDER_SUPPORT.openrouter.topK && !isAnthropic && !isOpenAI) {
             body.top_k = samplers.top_k;
@@ -4148,6 +4156,44 @@ function renderSystemPrompts() {
 }
 
 // === Settings ===
+const CUSTOM_MODEL_CONTROLS = {
+    openrouter: { select: 'openrouterModel', input: 'openrouterCustomModel', group: 'openrouterCustomGroup' },
+    claude: { select: 'claudeModel', input: 'claudeCustomModel', group: 'claudeCustomGroup' },
+    nous: { select: 'nousModel', input: 'nousCustomModel', group: 'nousCustomGroup' },
+    openai: { select: 'openaiModel', input: 'openaiCustomModel', group: 'openaiCustomGroup' },
+    gemini: { select: 'geminiModel', input: 'geminiCustomModel', group: 'geminiCustomGroup' },
+    mistral: { select: 'mistralModel', input: 'mistralCustomModel', group: 'mistralCustomGroup' }
+};
+
+function setModelControl(provider, model) {
+    const control = CUSTOM_MODEL_CONTROLS[provider];
+    const select = document.getElementById(control.select);
+    const customInput = document.getElementById(control.input);
+    const curated = Array.from(select.options).some(option => option.value === model && option.value !== '__custom__');
+
+    if (model && curated) {
+        select.value = model;
+        customInput.value = '';
+    } else {
+        select.value = '__custom__';
+        customInput.value = model || '';
+    }
+}
+
+function getModelControlValue(provider) {
+    const control = CUSTOM_MODEL_CONTROLS[provider];
+    const selected = document.getElementById(control.select).value;
+    return selected === '__custom__'
+        ? document.getElementById(control.input).value.trim()
+        : selected;
+}
+
+function updateCustomModelVisibility(provider) {
+    const control = CUSTOM_MODEL_CONTROLS[provider];
+    document.getElementById(control.group).style.display =
+        document.getElementById(control.select).value === '__custom__' ? 'block' : 'none';
+}
+
 function initSettings() {
     const testConnectionBtn = document.getElementById('testConnectionBtn');
     
@@ -4161,43 +4207,33 @@ function initSettings() {
     
     document.getElementById('openrouterEnabled').checked = s.endpoints.openrouter.enabled;
     document.getElementById('openrouterKey').value = s.endpoints.openrouter.key;
-    // OpenRouter: curated dropdown + persistent custom-slug slot.
-    const orSel = document.getElementById('openrouterModel');
-    const orCustom = document.getElementById('openrouterCustomModel');
-    const orModel = s.endpoints.openrouter.model || '';
-    const orCurated = Array.from(orSel.options).some(o => o.value === orModel && o.value !== '__custom__');
-    if (orModel && orCurated) {
-        orSel.value = orModel;
-        orCustom.value = '';
-    } else {
-        orSel.value = '__custom__';
-        orCustom.value = orModel;
-    }
+    setModelControl('openrouter', s.endpoints.openrouter.model);
+    document.getElementById('openrouterReasoningEffort').value = s.endpoints.openrouter.reasoningEffort || 'high';
 
     document.getElementById('claudeEnabled').checked = s.endpoints.claude.enabled;
     document.getElementById('claudeKey').value = s.endpoints.claude.key;
-    document.getElementById('claudeModel').value = s.endpoints.claude.model;
+    setModelControl('claude', s.endpoints.claude.model);
     document.getElementById('claudeEffort').value = s.endpoints.claude.effort || 'medium';
     document.getElementById('claudeCacheMode').value = cacheModeFromConfig(s.endpoints.claude);
 
     document.getElementById('nousEnabled').checked = s.endpoints.nous.enabled;
     document.getElementById('nousKey').value = s.endpoints.nous.key;
-    document.getElementById('nousModel').value = s.endpoints.nous.model;
+    setModelControl('nous', s.endpoints.nous.model);
 
     document.getElementById('openaiEnabled').checked = s.endpoints.openai.enabled;
     document.getElementById('openaiKey').value = s.endpoints.openai.key;
-    document.getElementById('openaiModel').value = s.endpoints.openai.model;
+    setModelControl('openai', s.endpoints.openai.model);
     document.getElementById('openaiApiMode').value = s.endpoints.openai.useResponsesApi ? 'responses' : 'chatcompletions';
     document.getElementById('openaiReasoningEffort').value = s.endpoints.openai.reasoningEffort || 'medium';
     document.getElementById('openaiCacheEnabled').checked = s.endpoints.openai.cacheEnabled !== false;
 
     document.getElementById('geminiEnabled').checked = s.endpoints.gemini.enabled;
     document.getElementById('geminiKey').value = s.endpoints.gemini.key;
-    document.getElementById('geminiModel').value = s.endpoints.gemini.model;
+    setModelControl('gemini', s.endpoints.gemini.model);
 
     document.getElementById('mistralEnabled').checked = s.endpoints.mistral.enabled;
     document.getElementById('mistralKey').value = s.endpoints.mistral.key;
-    document.getElementById('mistralModel').value = s.endpoints.mistral.model;
+    setModelControl('mistral', s.endpoints.mistral.model);
 
     document.getElementById('activeEndpoint').value = s.activeEndpoint;
     document.getElementById('sidebarEndpoint').value = s.activeEndpoint;
@@ -4213,47 +4249,71 @@ function initSettings() {
     document.getElementById('heartbeatQuietMinutes').value = s.heartbeat?.quietMinutes || 10;
 
     ['localEnabled', 'localUrl', 'runpodEnabled', 'runpodUrl',
-     'openrouterEnabled', 'openrouterKey', 'openrouterModel', 'openrouterCustomModel',
-     'claudeEnabled', 'claudeKey', 'claudeModel', 'claudeEffort', 'claudeCacheMode',
-     'nousEnabled', 'nousKey', 'nousModel',
-     'openaiEnabled', 'openaiKey', 'openaiModel', 'openaiApiMode', 'openaiReasoningEffort', 'openaiCacheEnabled',
-     'geminiEnabled', 'geminiKey', 'geminiModel',
-     'mistralEnabled', 'mistralKey', 'mistralModel',
+     'openrouterEnabled', 'openrouterKey', 'openrouterModel', 'openrouterCustomModel', 'openrouterReasoningEffort',
+     'claudeEnabled', 'claudeKey', 'claudeModel', 'claudeCustomModel', 'claudeEffort', 'claudeCacheMode',
+     'nousEnabled', 'nousKey', 'nousModel', 'nousCustomModel',
+     'openaiEnabled', 'openaiKey', 'openaiModel', 'openaiCustomModel', 'openaiApiMode', 'openaiReasoningEffort', 'openaiCacheEnabled',
+     'geminiEnabled', 'geminiKey', 'geminiModel', 'geminiCustomModel',
+     'mistralEnabled', 'mistralKey', 'mistralModel', 'mistralCustomModel',
      'toolsEnabled', 'braveKey', 'toolsWorkingDir', 'nanoImageKey',
      'heartbeatEnabled', 'heartbeatQuietMinutes',
      'activeEndpoint'].forEach(id => {
         document.getElementById(id).addEventListener('change', updateSettings);
     });
     // Text inputs — also save on blur/input so typing is captured
-    ['braveKey', 'toolsWorkingDir', 'nanoImageKey', 'openrouterCustomModel', 'heartbeatQuietMinutes'].forEach(id => {
+    ['braveKey', 'toolsWorkingDir', 'nanoImageKey', 'openrouterCustomModel', 'claudeCustomModel',
+     'nousCustomModel', 'openaiCustomModel', 'geminiCustomModel', 'mistralCustomModel',
+     'heartbeatQuietMinutes'].forEach(id => {
         document.getElementById(id).addEventListener('input', updateSettings);
     });
 
-    // Show the OpenRouter custom-slug field only when "Custom" is selected
-    const updateOpenRouterCustomVisibility = () => {
-        document.getElementById('openrouterCustomGroup').style.display =
-            document.getElementById('openrouterModel').value === '__custom__' ? 'block' : 'none';
+    // Every public provider accepts a persistent custom model ID. This future-proofs
+    // model names; provider request-shape changes may still require a code update.
+    Object.keys(CUSTOM_MODEL_CONTROLS).forEach(provider => {
+        const control = CUSTOM_MODEL_CONTROLS[provider];
+        document.getElementById(control.select).addEventListener('change', () => updateCustomModelVisibility(provider));
+        updateCustomModelVisibility(provider);
+    });
+
+    const updateOpenRouterReasoningVisibility = () => {
+        const model = getModelControlValue('openrouter');
+        document.getElementById('openrouterReasoningGroup').style.display =
+            isOpenRouterGrokThinkingModel(model) ? 'block' : 'none';
     };
-    document.getElementById('openrouterModel').addEventListener('change', updateOpenRouterCustomVisibility);
-    updateOpenRouterCustomVisibility();
+    document.getElementById('openrouterModel').addEventListener('change', updateOpenRouterReasoningVisibility);
+    document.getElementById('openrouterCustomModel').addEventListener('input', updateOpenRouterReasoningVisibility);
+    updateOpenRouterReasoningVisibility();
 
     // Show/hide reasoning effort based on selected OpenAI model
     const updateReasoningVisibility = () => {
-        const model = document.getElementById('openaiModel').value;
+        const model = getModelControlValue('openai');
         document.getElementById('reasoningEffortGroup').style.display =
             isOpenAIThinkingModel(model) ? 'block' : 'none';
+
+        const maxOption = document.getElementById('openaiReasoningMax');
+        const effortSelect = document.getElementById('openaiReasoningEffort');
+        const supportsMax = model.startsWith('gpt-5.6');
+        maxOption.disabled = !supportsMax;
+        maxOption.hidden = !supportsMax;
+        if (!supportsMax && effortSelect.value === 'max') {
+            effortSelect.value = 'xhigh';
+            state.settings.endpoints.openai.reasoningEffort = 'xhigh';
+            saveState();
+        }
     };
     document.getElementById('openaiModel').addEventListener('change', updateReasoningVisibility);
+    document.getElementById('openaiCustomModel').addEventListener('input', updateReasoningVisibility);
     updateReasoningVisibility();
 
-    // Show/hide Claude effort selector based on selected Claude model (4.7/4.8 only)
+    // Show/hide Claude effort selector based on the effective curated/custom model.
     const updateClaudeEffortVisibility = () => {
-        const model = document.getElementById('claudeModel').value;
+        const model = getModelControlValue('claude');
         document.getElementById('claudeEffortGroup').style.display =
             isClaudeEffortModel(model) ? 'block' : 'none';
         updateSamplerVisibility();
     };
     document.getElementById('claudeModel').addEventListener('change', updateClaudeEffortVisibility);
+    document.getElementById('claudeCustomModel').addEventListener('input', updateClaudeEffortVisibility);
     updateClaudeEffortVisibility();
 
     testConnectionBtn.addEventListener('click', testConnection);
@@ -4278,21 +4338,18 @@ function updateSettings() {
         url: document.getElementById('runpodUrl').value
     };
     
-    const orSelVal = document.getElementById('openrouterModel').value;
-    const orModelVal = orSelVal === '__custom__'
-        ? document.getElementById('openrouterCustomModel').value.trim()
-        : orSelVal;
     state.settings.endpoints.openrouter = {
         enabled: document.getElementById('openrouterEnabled').checked,
         key: document.getElementById('openrouterKey').value,
-        model: orModelVal
+        model: getModelControlValue('openrouter'),
+        reasoningEffort: document.getElementById('openrouterReasoningEffort').value
     };
 
     const clMode = document.getElementById('claudeCacheMode').value;
     state.settings.endpoints.claude = {
         enabled: document.getElementById('claudeEnabled').checked,
         key: document.getElementById('claudeKey').value,
-        model: document.getElementById('claudeModel').value,
+        model: getModelControlValue('claude'),
         effort: document.getElementById('claudeEffort').value,
         cacheEnabled: clMode !== 'off',
         cacheTtl: clMode === 'off' ? '5m' : clMode
@@ -4301,13 +4358,13 @@ function updateSettings() {
     state.settings.endpoints.nous = {
         enabled: document.getElementById('nousEnabled').checked,
         key: document.getElementById('nousKey').value,
-        model: document.getElementById('nousModel').value
+        model: getModelControlValue('nous')
     };
 
     state.settings.endpoints.openai = {
         enabled: document.getElementById('openaiEnabled').checked,
         key: document.getElementById('openaiKey').value,
-        model: document.getElementById('openaiModel').value,
+        model: getModelControlValue('openai'),
         useResponsesApi: document.getElementById('openaiApiMode').value === 'responses',
         reasoningEffort: document.getElementById('openaiReasoningEffort').value,
         cacheEnabled: document.getElementById('openaiCacheEnabled').checked
@@ -4316,14 +4373,14 @@ function updateSettings() {
     state.settings.endpoints.gemini = {
         enabled: document.getElementById('geminiEnabled').checked,
         key: document.getElementById('geminiKey').value,
-        model: document.getElementById('geminiModel').value,
+        model: getModelControlValue('gemini'),
         cacheEnabled: true
     };
 
     state.settings.endpoints.mistral = {
         enabled: document.getElementById('mistralEnabled').checked,
         key: document.getElementById('mistralKey').value,
-        model: document.getElementById('mistralModel').value,
+        model: getModelControlValue('mistral'),
         cacheEnabled: true
     };
 
@@ -4360,6 +4417,10 @@ async function testConnection() {
     try {
         const endpoint = state.settings.activeEndpoint;
         const config = state.settings.endpoints[endpoint];
+
+        if (endpoint !== 'local' && endpoint !== 'runpod' && !config?.model) {
+            throw new Error('Model not set. Choose a model or enter a custom model ID in the Machine Room.');
+        }
         
         if (endpoint === 'local' || endpoint === 'runpod') {
             const response = await fetch(`${config.url}/v1/models`, { 
@@ -4371,6 +4432,14 @@ async function testConnection() {
             if (!config.key) {
                 throw new Error('API key not set');
             }
+            const body = {
+                model: config.model,
+                messages: [{ role: 'user', content: 'ping' }],
+                max_tokens: TEST_CONNECTION_MAX_TOKENS
+            };
+            if (isOpenRouterGrokThinkingModel(config.model)) {
+                body.reasoning = { effort: config.reasoningEffort || 'high' };
+            }
             const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
                 method: 'POST',
                 headers: {
@@ -4379,11 +4448,7 @@ async function testConnection() {
                     'HTTP-Referer': 'http://localhost:3000',
                     'X-Title': 'Little Lantern'
                 },
-                body: JSON.stringify({
-                    model: config.model,
-                    messages: [{ role: 'user', content: 'ping' }],
-                    max_tokens: TEST_CONNECTION_MAX_TOKENS
-                }),
+                body: JSON.stringify(body),
                 signal: AbortSignal.timeout(15000)
             });
             await ensureTestOk(response, 'OpenRouter');
