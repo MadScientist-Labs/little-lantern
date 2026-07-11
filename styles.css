@@ -833,12 +833,6 @@ select {
     overflow-y: auto;
 }
 
-.memorybook-actions {
-    padding: 0 var(--space-lg) var(--space-lg);
-    display: flex;
-    justify-content: flex-end;
-}
-
 .memorybook-item {
     background: var(--bg-medium);
     border: 1px solid var(--border);
@@ -1106,6 +1100,12 @@ select {
     display: flex;
     flex-direction: column;
     gap: var(--space-md);
+}
+
+.entries-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: var(--space-md);
 }
 
 .entry-item {

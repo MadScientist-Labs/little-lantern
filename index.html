@@ -376,18 +376,16 @@
             <section class="panel" id="panel-memorybooks">
                 <div class="panel-header">
                     <h2>Memory Books</h2>
+
+                    <button class="btn btn-primary" id="newMemoryBookBtn">
+                        + New Memory Book
+                    </button>
                 </div>
                 
                 <div class="memorybook-list" id="memoryBookList">
                     <!-- Memory books load here -->
                 </div>
 
-                <div class="memorybook-actions">
-                    <button class="btn btn-primary" id="newMemoryBookBtn">
-                        + New Memory Book
-                    </button>
-                </div>
-                
                 <!-- Memory Book Editor Modal -->
                 <div class="modal" id="memoryBookModal">
                     <div class="modal-content">
@@ -405,11 +403,14 @@
                             <div class="entries-section">
                                 <div class="entries-header">
                                     <h4>Entries</h4>
-                                    <button class="btn btn-small" id="addEntryBtn">+ Add Entry</button>
                                 </div>
                                 
                                 <div class="entries-list" id="memoryBookEntries">
                                     <!-- Entries load here -->
+                                </div>
+
+                                <div class="entries-actions">
+                                    <button class="btn btn-small" id="addEntryBtn">+ Add Entry</button>
                                 </div>
                             </div>
                             
