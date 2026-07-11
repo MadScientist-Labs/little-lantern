@@ -1,10 +1,14 @@
 # Little Lantern 🔦
 
-A cosy, private place to talk to AI that lives on **your own computer** — not on someone else's website. You bring your own AI; Little Lantern gives it a warm home, a memory, and a face.
+Little Lantern is free, open-source AI companion software: a cosy, private desktop app that runs on your own computer, not on someone else’s website.
 
-No account. No cloud. No middleman. Just a small app sitting quietly on your machine, talking only to the AI *you* chose, on *your* key.
+A home for your AI companions that runs on **your own computer**. You bring your own AI provider; Little Lantern gives your companion a creative space, memory, and a face.
 
-## Community software — not a commercial product or hosted service
+Open source. No account. No cloud. No middleman. Just a small app sitting quietly on your machine, talking only to the AI you chose, on your key.
+
+Little Lantern itself is completely free. You only pay any API charges from the AI provider you choose.
+
+## Community software — not a commercial product or hosted service.
 
 Little Lantern is community software released into the public domain. You are welcome to modify it, build integrations, host your own version, and share what you create. The standard release is designed for local use; custom versions require their own setup, security, maintenance, and technical support.
 
